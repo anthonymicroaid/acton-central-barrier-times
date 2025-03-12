@@ -36,5 +36,11 @@
             <li>{{ departure }}</li>
         {% endfor %}
     </ul>
+    <script>
+        // Auto-refresh the page every 10 seconds
+        setTimeout(function() {
+            window.location.reload();
+        }, 10000);
+    </script>
 </body>
 </html>
