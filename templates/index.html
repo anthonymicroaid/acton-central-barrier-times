@@ -6,38 +6,162 @@
     <title>Acton Central Barrier Times</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: #f0f4f8;
         }
         h1 {
             text-align: center;
-            color: #333;
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #countdown {
+            text-align: center;
+            font-size: 18px;
+            color: #e74c3c;
+            margin-bottom: 20px;
         }
         ul {
             list-style-type: none;
             padding: 0;
         }
         li {
-            background: #fff;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 16px;
+            transition: transform 0.2s;
+            min-height: 50px;
+        }
+        li:hover {
+            transform: scale(1.02);
+        }
+        li.stratford {
+            background: linear-gradient(to right, #e6f0fa, #ffffff);
+            border-left: 4px solid #3498db;
+        }
+        li.richmond {
+            background: linear-gradient(to right, #fff5e6, #ffffff);
+            border-left: 4px solid #f39c12;
+        }
+        .arrow {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        .east::before {
+            content: "➡️";
+        }
+        .west::before {
+            content: "⬅️";
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            li {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .arrow {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <div id="loading">
+        <div class="spinner"></div>
+    </div>
     <h1>Acton Central Barrier Closing Times</h1>
+    <div id="countdown"></div>
     <ul>
         {% for departure in upcoming %}
-            <li>{{ departure }}</li>
+            <li class="{% if 'Stratford' in departure %}stratford{% else %}richmond{% endif %}">
+                <span class="arrow {% if 'Stratford' in departure %}east{% else %}west{% endif %}"></span>
+                {{ departure }}
+            </li>
         {% endfor %}
     </ul>
     <script>
-        // Auto-refresh the page every 10 seconds
+        // Function to update countdown
+        function updateCountdown(nextClosingIso) {
+            console.log("Next closing ISO:", nextClosingIso); // Debug log
+            if (!nextClosingIso || nextClosingIso === 'null' || nextClosingIso === 'None') {
+                document.getElementById('countdown').innerText = "No upcoming departures.";
+                return;
+            }
+            try {
+                const closingTime = new Date(nextClosingIso);
+                const now = new Date();
+                const diffMs = closingTime - now;
+                if (isNaN(diffMs)) {
+                    document.getElementById('countdown').innerText = "Invalid time data.";
+                    console.error("Invalid date conversion:", nextClosingIso);
+                    return;
+                }
+                if (diffMs <= 0) {
+                    document.getElementById('countdown').innerText = "The Acton Central barrier is now closed and will re-open soon.";
+                } else {
+                    const minutes = Math.floor(diffMs / 60000);
+                    const seconds = Math.floor((diffMs % 60000) / 1000);
+                    document.getElementById('countdown').innerText = `The Acton Central barrier is now open and will close in ${minutes} minutes ${seconds} seconds.`;
+                }
+            } catch (e) {
+                document.getElementById('countdown').innerText = "Error calculating time.";
+                console.error("Countdown error:", e);
+            }
+        }
+
+        // Initial call with next_closing from Flask (ISO string)
+        const nextClosingIso = "{{ next_closing|safe }}";
+        console.log("Rendered nextClosingIso:", nextClosingIso); // Debug log
+        if (nextClosingIso && nextClosingIso !== 'null' && nextClosingIso !== 'None') {
+            updateCountdown(nextClosingIso);
+            // Update countdown every second
+            setInterval(() => updateCountdown(nextClosingIso), 1000);
+        } else {
+            document.getElementById('countdown').innerText = "No upcoming departures.";
+        }
+
+        // Hide loading spinner after page load
+        window.onload = function() {
+            document.getElementById('loading').style.display = 'none';
+        };
+
+        // Auto-refresh every 10 seconds
         setTimeout(function() {
             window.location.reload();
         }, 10000);
