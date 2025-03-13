@@ -3,56 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acton Central Barrier Times</title>
+    <title>Acton Central Barrier Monitor</title>
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f0f4f8;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         h1 {
             text-align: center;
-            color: #2c3e50;
-            font-size: 24px;
-            margin-bottom: 20px;
+            color: #1a1a1a;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            opacity: 0;
+            animation: fadeInDown 0.8s ease forwards;
         }
         #countdown {
             text-align: center;
-            font-size: 18px;
-            color: #e74c3c;
-            margin-bottom: 20px;
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 0.3s;
+        }
+        #countdown.open {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: #ffffff;
+        }
+        #countdown.closed {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: #ffffff;
+        }
+        #countdown .progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            transition: width 1s linear;
         }
         ul {
             list-style-type: none;
             padding: 0;
+            width: 100%;
+            max-width: 500px;
         }
         li {
             display: flex;
             align-items: center;
-            margin: 8px 0;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            font-size: 16px;
-            transition: transform 0.2s;
-            min-height: 50px;
+            margin: 15px 0;
+            padding: 15px 20px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            font-size: 18px;
+            font-weight: 500;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 60px;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: calc(0.5s + var(--index) * 0.2s);
         }
         li:hover {
-            transform: scale(1.02);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
         }
         li.stratford {
-            background: linear-gradient(to right, #e6f0fa, #ffffff);
-            border-left: 4px solid #3498db;
+            border-left: 5px solid #007aff;
         }
         li.richmond {
-            background: linear-gradient(to right, #fff5e6, #ffffff);
-            border-left: 4px solid #f39c12;
+            border-left: 5px solid #ff9500;
         }
         .arrow {
-            margin-right: 10px;
-            font-size: 20px;
+            margin-right: 12px;
+            font-size: 24px;
+            color: #666;
         }
         .east::before {
             content: "➡️";
@@ -66,37 +109,63 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            transition: opacity 0.5s ease-out;
+        }
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007aff;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1s;
+        }
         @media (max-width: 600px) {
             body {
+                padding: 15px;
+            }
+            #countdown {
+                font-size: 20px;
                 padding: 10px;
             }
-            h1 {
-                font-size: 20px;
-            }
             li {
-                font-size: 14px;
-                padding: 8px;
+                font-size: 16px;
+                padding: 12px;
+                min-height: 50px;
             }
             .arrow {
-                font-size: 16px;
+                font-size: 20px;
+            }
+            footer {
+                font-size: 10px;
             }
         }
     </style>
@@ -105,61 +174,103 @@
     <div id="loading">
         <div class="spinner"></div>
     </div>
-    <h1>Acton Central Barrier Closing Times</h1>
-    <div id="countdown"></div>
+    <h1>Acton Central Barrier Monitor</h1>
+    <div id="countdown" class="open"></div>
     <ul>
         {% for departure in upcoming %}
-            <li class="{% if 'Stratford' in departure %}stratford{% else %}richmond{% endif %}">
+            <li style="--index: {{ loop.index0 }}" class="{% if 'Stratford' in departure %}stratford{% else %}richmond{% endif %}">
                 <span class="arrow {% if 'Stratford' in departure %}east{% else %}west{% endif %}"></span>
                 {{ departure }}
             </li>
         {% endfor %}
-    </ul>
+    <footer>
+        This page refreshes every 10 seconds to pull live data from TfL.
+    </footer>
     <script>
-        // Function to update countdown
-        function updateCountdown(nextClosingIso) {
-            console.log("Next closing ISO:", nextClosingIso); // Debug log
+        // Function to update countdown and progress bar
+        function updateCountdown(nextClosingIso, nextOpeningIso) {
+            console.log("Next closing ISO:", nextClosingIso);
+            console.log("Next opening ISO:", nextOpeningIso);
+            const countdownElement = document.getElementById('countdown');
+            const progressElement = document.createElement('div');
+            progressElement.className = 'progress';
+            countdownElement.innerHTML = '';
+            countdownElement.appendChild(progressElement);
+
             if (!nextClosingIso || nextClosingIso === 'null' || nextClosingIso === 'None') {
-                document.getElementById('countdown').innerText = "No upcoming departures.";
+                countdownElement.innerText = "No upcoming departures.";
+                countdownElement.className = '';
                 return;
             }
             try {
                 const closingTime = new Date(nextClosingIso);
+                const openingTime = new Date(nextOpeningIso);
                 const now = new Date();
-                const diffMs = closingTime - now;
-                if (isNaN(diffMs)) {
-                    document.getElementById('countdown').innerText = "Invalid time data.";
-                    console.error("Invalid date conversion:", nextClosingIso);
+                const diffToCloseMs = closingTime - now;
+                const diffToOpenMs = openingTime - now;
+
+                if (isNaN(diffToCloseMs) || isNaN(diffToOpenMs)) {
+                    countdownElement.innerText = "Invalid time data.";
+                    countdownElement.className = '';
+                    console.error("Invalid date conversion:", nextClosingIso, nextOpeningIso);
                     return;
                 }
-                if (diffMs <= 0) {
-                    document.getElementById('countdown').innerText = "The Acton Central barrier is now closed and will re-open soon.";
+
+                if (diffToCloseMs <= 0 && diffToOpenMs > 0) {
+                    // Barrier is closed
+                    const minutes = Math.floor(diffToOpenMs / 60000);
+                    const seconds = Math.floor((diffToOpenMs % 60000) / 1000);
+                    countdownElement.innerText = `The Acton Central barrier is now closed and will re-open in ${minutes} minutes ${seconds} seconds.`;
+                    countdownElement.className = 'closed';
+                    const totalClosedMs = 60000; // Default 1 minute closed duration
+                    const remainingClosedMs = Math.max(0, diffToOpenMs);
+                    const progress = (remainingClosedMs / totalClosedMs) * 100;
+                    progressElement.style.width = `${progress}%`;
+                } else if (diffToCloseMs > 0) {
+                    // Barrier is open
+                    const minutes = Math.floor(diffToCloseMs / 60000);
+                    const seconds = Math.floor((diffToCloseMs % 60000) / 1000);
+                    countdownElement.innerText = `The Acton Central barrier is now open and will close in ${minutes} minutes ${seconds} seconds.`;
+                    countdownElement.className = 'open';
+                    const totalOpenMs = 120000; // 2 minutes open window
+                    const remainingOpenMs = Math.max(0, diffToCloseMs);
+                    const progress = (remainingOpenMs / totalOpenMs) * 100;
+                    progressElement.style.width = `${progress}%`;
                 } else {
-                    const minutes = Math.floor(diffMs / 60000);
-                    const seconds = Math.floor((diffMs % 60000) / 1000);
-                    document.getElementById('countdown').innerText = `The Acton Central barrier is now open and will close in ${minutes} minutes ${seconds} seconds.`;
+                    // Barrier has reopened
+                    countdownElement.innerText = `The Acton Central barrier is now open and will close soon.`;
+                    countdownElement.className = 'open';
+                    progressElement.style.width = '100%';
                 }
             } catch (e) {
-                document.getElementById('countdown').innerText = "Error calculating time.";
+                countdownElement.innerText = "Error calculating time.";
+                countdownElement.className = '';
                 console.error("Countdown error:", e);
             }
         }
 
-        // Initial call with next_closing from Flask (ISO string)
+        // Initial call with next_closing and next_opening from Flask
         const nextClosingIso = "{{ next_closing|safe }}";
-        console.log("Rendered nextClosingIso:", nextClosingIso); // Debug log
-        if (nextClosingIso && nextClosingIso !== 'null' && nextClosingIso !== 'None') {
-            updateCountdown(nextClosingIso);
+        const nextOpeningIso = "{{ next_opening|safe }}";
+        console.log("Rendered nextClosingIso:", nextClosingIso);
+        console.log("Rendered nextOpeningIso:", nextOpeningIso);
+        if (nextClosingIso && nextClosingIso !== 'null' && nextClosingIso !== 'None' &&
+            nextOpeningIso && nextOpeningIso !== 'null' && nextOpeningIso !== 'None') {
+            updateCountdown(nextClosingIso, nextOpeningIso);
             // Update countdown every second
-            setInterval(() => updateCountdown(nextClosingIso), 1000);
+            setInterval(() => updateCountdown(nextClosingIso, nextOpeningIso), 1000);
         } else {
             document.getElementById('countdown').innerText = "No upcoming departures.";
+            document.getElementById('countdown').className = '';
         }
 
-        // Hide loading spinner after page load
-        window.onload = function() {
-            document.getElementById('loading').style.display = 'none';
-        };
+        // Hide loading spinner after page load with a delay for reliability
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const loadingElement = document.getElementById('loading');
+                loadingElement.classList.add('hidden');
+            }, 500);
+        });
 
         // Auto-refresh every 10 seconds
         setTimeout(function() {
